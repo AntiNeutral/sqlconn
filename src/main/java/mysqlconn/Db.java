@@ -1,12 +1,17 @@
 package mysqlconn;
 import java.sql.*;
+import java.sql.Date;
 import java.util.*;
+import rXlsx.dataframe;
+import rXlsx.series;
 
 public class Db {
-    ArrayList<String> table_list = new ArrayList<>();
-    Connection conn;
-    Map<String, LinkedHashMap<String, String>> loaded_tables = new HashMap<>();
-    DatabaseMetaData meta;
+    public ArrayList<String> table_list = new ArrayList<>();
+    private final Connection conn;
+    public Map<String, LinkedHashMap<String, String>> loaded_tables = new HashMap<>();
+    public DatabaseMetaData meta;
+    public final HashMap<Integer, PreparedStatement> prep_stmt = new HashMap<>();
+    public final HashMap<Integer, QString>  queries = new HashMap<>();
 
     public Db(String url, String user, String password) throws SQLException {
         this.conn = DriverManager.getConnection(url, user, password);
@@ -79,5 +84,63 @@ public class Db {
             this.conn.rollback();
             throw e;
         } finally {this.conn.setAutoCommit(true);}
+    }
+
+    public void bulkInsert(String table_name, dataframe df) throws SQLException {
+        int width = df.dim[1];
+        ArrayList<String> column_types = df.column_type;
+        ArrayList<String> columns = df.columns;
+        String command = this.prepareInsertString(table_name);
+        try (PreparedStatement stmt = this.conn.prepareStatement(command)) {
+            this.conn.setAutoCommit(false);
+            int batch_size = 1000;
+            int i = 0;
+            for (series row: df.data) {
+                for (int j = 0; j < width; j++) {
+                    switch (column_types.get(j)) {
+                        case "str":
+                            stmt.setString(j + 1, (String) row.data.get(columns.get(j)));
+                            break;
+                        case "d":
+                            stmt.setDouble(j + 1, (Double) row.data.get(columns.get(j)));
+                            break;
+                        case "int":
+                            stmt.setInt(j + 1, (Integer) row.data.get(columns.get(j)));
+                            break;
+                        case "date":
+                            stmt.setDate(j + 1, (Date) row.data.get(columns.get(j)));
+                            break;
+                    }
+                }
+                stmt.addBatch();
+                if ((i + 1) % batch_size == 0) {
+                    stmt.executeBatch();
+                }
+                i++;
+            }
+            stmt.executeBatch();
+            this.conn.commit();
+        } catch (SQLException e) {
+            this.conn.rollback();
+            throw e;
+        } finally {this.conn.setAutoCommit(true);}
+    }
+
+    public ResultSet executeQuery(String query) throws SQLException {
+        return this.conn.createStatement().executeQuery(query);
+    }
+
+    public void addQuery(Integer id) {
+        this.queries.put(id, new QString());
+    }
+
+    public void from(Integer id, String table) throws SQLException {
+        this.loadTable(table);
+        this.queries.get(id).from(table);
+    }
+
+    public void join(Integer id, String table, String on_main_table, String on_main_column, String on_right_column, String type) throws SQLException {
+        this.loadTable(table);
+        this.queries.get(id).join(table, on_main_table, on_main_column, on_right_column, type);
     }
 }
