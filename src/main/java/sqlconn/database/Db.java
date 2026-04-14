@@ -1,4 +1,4 @@
-package sqlconn;
+package sqlconn.database;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
@@ -6,20 +6,23 @@ import rXlsx.dataframe;
 import rXlsx.series;
 
 abstract class Db {
-    public ArrayList<String> table_list = new ArrayList<>();
+    private final ArrayList<String> table_list = new ArrayList<>();
     private final HashMap<String, LinkedHashMap<String, String>> loaded_tables = new HashMap<>();
-    public DatabaseMetaData meta;
-    public final HashMap<Integer, QString>  queries = new HashMap<>();
+    private final DatabaseMetaData meta;
+    final HashMap<Integer, QString>  queries = new HashMap<>();
     private final Connection conn;
 
-    public Db(String url, String user, String password) throws SQLException {
-        this.conn = DriverManager.getConnection(url, user, password);
-        this.meta = conn.getMetaData();
-        try (ResultSet tables = this.meta.getTables(null, null, "%", new String[]{"TABLE"})) {
-            while (tables.next()) {
-            this.table_list.add(tables.getString("TABLE_NAME"));
+    public Db(String url, String user, String password, String platform) throws SQLException {
+        if (platform.equals("MySQL")) {
+            this.conn = DriverManager.getConnection(url, user, password);
+            this.meta = conn.getMetaData();
+            try (ResultSet tables = this.meta.getTables(null, null, "%", new String[]{"TABLE"})) {
+                while (tables.next()) {
+                    this.table_list.add(tables.getString("TABLE_NAME"));
+                }
             }
         }
+        throw new SQLException("Invalid platform");
     }
 
     public HashMap<String, LinkedHashMap<String, String>> showCachedTables() {
@@ -58,6 +61,10 @@ abstract class Db {
             }
             this.loaded_tables.put(table_name, columns);
         }
+    }
+
+    public String getQuery(Integer id) {
+        return this.queries.get(id).getQuery();
     }
 
     public String prepareInsertString(String table_name) throws SQLException {
@@ -188,5 +195,5 @@ abstract class Db {
         this.queries.get(id).groupBy(tables, columns);
     }
 
-    abstract public void slice();
+    abstract public void slice(Integer id, int num);
 }

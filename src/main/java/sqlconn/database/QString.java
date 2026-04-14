@@ -1,10 +1,10 @@
-package sqlconn;
+package sqlconn.database;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 
-public class QString {
-    public String body;
+class QString {
+    private String body;
     public HashSet<String> tables;
     private int avail_clauses = 0;
 
@@ -12,12 +12,13 @@ public class QString {
         this.body = "";
     }
 
+    String getQuery() {
+        return this.body;
+    }
+
     void from(String table) {
-        if (this.tables.contains(table)) {
-            throw new IllegalArgumentException("Table already exists");
-        }
         if (avail_clauses > 1) {
-            throw new IllegalArgumentException("Clause already exists");
+            throw new IllegalArgumentException("FROM clause already exists");
         }
         this.body = this.body + " " + table;
         this.tables.add(table);
@@ -26,10 +27,10 @@ public class QString {
 
     void join(String table, String on_main_table, String on_main_column, String on_right_column, String type) {
         if (this.avail_clauses > 2) {
-            throw new IllegalArgumentException("Clause already exists");
+            throw new IllegalArgumentException("JOIN clause already exists");
         }
         if (this.tables.contains(table)) {
-            throw new IllegalArgumentException("Table already exists");
+            throw new IllegalArgumentException("Table already joined");
         }
         if (!type.equals("left") && !type.equals("right") && !type.equals("inner") && !type.equals("outer")) {
             throw new IllegalArgumentException("Invalid join type");
@@ -41,21 +42,34 @@ public class QString {
 
     void unsafeWhere(String condition) {
         if (this.avail_clauses > 3) {
-            throw new IllegalArgumentException("Clause already exists");
+            throw new IllegalArgumentException("WHERE clause already exists");
+        } else if (this.avail_clauses < 3 && this.avail_clauses > 0) {
+            this.body = this.body + " where " + condition;
+            this.avail_clauses = 3;
+        } else if (this.avail_clauses == -1) {
+            this.body = this.body + " " + condition;
+            this.avail_clauses = 3;
+        } else {
+            throw new IllegalArgumentException("Add a logical operator before adding another WHERE clause");
         }
-        this.body = this.body + " where " + condition;
-        this.avail_clauses = 3;
     }
 
     void mathWhere(String template, ArrayList<String> argsTable, ArrayList<String> argsColumn) {
         if (this.avail_clauses > 3) {
-            throw new IllegalArgumentException("Insert a where clause first or where clause already exists");
+            throw new IllegalArgumentException("WHERE clause already exists");
         }
         for (int i = 0; i < argsTable.size(); i++) {
             template = template.replaceFirst(" ? ", " " + argsTable.get(i) + "." + argsColumn.get(i) + " ");
         }
-        this.body = this.body + " where " + template;
-        this.avail_clauses = 3;
+        template = template.strip();
+        if (this.avail_clauses < 3 && this.avail_clauses > 0) {
+            this.body = this.body + " where " + template;
+            this.avail_clauses = 3;
+        } else if (this.avail_clauses == -1) {
+            this.body = this.body + " " + template;
+        } else {
+            throw new IllegalArgumentException("Add a logical operator before adding another WHERE clause");
+        }
     }
 
     /**
@@ -67,11 +81,14 @@ public class QString {
             throw new IllegalArgumentException("Insert a where clause first or where clause already exists");
         }
         this.body = this.body + " " + logic;
+        this.avail_clauses = -1;
     }
 
     void groupBy(String table, String column) {
         if (this.avail_clauses > 4) {
-            throw new IllegalArgumentException("Clause already exists");
+            throw new IllegalArgumentException("GROUPBY clause already exists");
+        } else if (this.avail_clauses == -1) {
+            throw new IllegalArgumentException("WHERE clause not finished");
         } else if (this.avail_clauses < 4) {
             this.body = this.body + " group by " + table + "." + column;
             this.avail_clauses = 4;
@@ -82,7 +99,9 @@ public class QString {
 
     void groupBy(ArrayList<String> tables, ArrayList<String> columns) {
         if (this.avail_clauses > 4) {
-            throw new IllegalArgumentException("Clause already exists");
+            throw new IllegalArgumentException("GROUPBY clause already exists");
+        } else if (this.avail_clauses == -1) {
+            throw new IllegalArgumentException("WHERE clause not finished");
         } else if (this.avail_clauses < 4) {
             StringBuilder group_by_clause = new StringBuilder(" group by");
             for (int i = 0; i < tables.size(); i++) {
@@ -97,5 +116,12 @@ public class QString {
             }
             this.body += group_by_clause;
         }
+    }
+
+    void limit(int num) {
+        if (this.avail_clauses <= 6) {
+            throw new IllegalArgumentException("Finsh the query first");
+        }
+        this.body = this.body + " limit " + num;
     }
 }
