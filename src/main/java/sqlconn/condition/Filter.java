@@ -1,4 +1,4 @@
-package condition;
+package sqlconn.condition;
 
 import java.util.ArrayList;
 import java.util.List;
