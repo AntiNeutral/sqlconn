@@ -5,13 +5,17 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 public class Condition {
-    public final LinkedList<Expression> expressions = new LinkedList<>();
-    public final HashMap<String, ArrayList<String>> columns = new HashMap<>();
+    final LinkedList<Expression> expressions = new LinkedList<>();
+    final HashMap<String, ArrayList<String>> columns = new HashMap<>();
 
     public Condition(Expression expression) {
-        this.expressions.addFirst( expression);
+        this.expressions.addFirst(expression);
     }
 
     public Condition() {
+    }
+
+    public String toSql() {
+        return this.expressions.getFirst().toSql();
     }
 }

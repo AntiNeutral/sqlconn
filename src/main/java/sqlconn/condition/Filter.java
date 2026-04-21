@@ -16,8 +16,16 @@ public class Filter extends Expression{
         this.column = column;
     }
 
+    public Filter(String table, String column, String value) {
+        this(true, true, table, column, value);
+    }
+
+    public Filter(boolean isAnd, String table, String column, String value) {
+        this(isAnd, true, table, column, value);
+    }
+
     @Override
-    public String toString() {
+    public String toSql() {
         return this.table + "." + this.column + " = " + this.value;
     }
 }
