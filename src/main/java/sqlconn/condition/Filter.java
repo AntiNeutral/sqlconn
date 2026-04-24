@@ -1,8 +1,5 @@
 package sqlconn.condition;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Filter extends Expression{
     public final String value;
     public final String table;
@@ -11,9 +8,9 @@ public class Filter extends Expression{
     public Filter(boolean isAnd, boolean negation, String table, String column, String value) {
         super(isAnd, negation);
         this.value = value;
-        this.columns.put(table, new ArrayList<>(List.of(column)));
         this.table = table;
         this.column = column;
+        this.addColumn(table, column);
     }
 
     public Filter(String table, String column, String value) {
@@ -26,6 +23,7 @@ public class Filter extends Expression{
 
     @Override
     public String toSql() {
-        return this.table + "." + this.column + " = " + this.value;
+        String sql = this.table + "." + this.column + " = " + this.value;
+        return this.notWrapper(sql);
     }
 }

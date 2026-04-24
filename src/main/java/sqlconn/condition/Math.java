@@ -1,6 +1,8 @@
 package sqlconn.condition;
 
 import sqlconn.condition.mathformula.Formula;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class Math extends Expression{
     public Formula root;
@@ -10,6 +12,8 @@ public class Math extends Expression{
         super(isAnd, negation);
         this.root = formula;
         this.tail = formula;
+        this.columns.put(formula.column, new HashSet<>());
+        this.columns.get(formula.column).add(formula.table);
     }
 
     public Math(Formula formula) {
@@ -22,7 +26,11 @@ public class Math extends Expression{
 
     public void append(Formula formula) {
         this.tail.next = formula;
-        this.tail = formula;
+        do {
+            this.tail = this.tail.next;
+            this.addColumn(formula.table, formula.column);
+        }
+        while (this.tail.next != null);
     }
 
     @Override
@@ -33,6 +41,6 @@ public class Math extends Expression{
             sql.append(current.toSql());
             current = current.next;
         };
-        return sql.toString();
+        return this.notWrapper(sql.toString());
     }
 }
