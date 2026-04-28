@@ -14,8 +14,19 @@ abstract public class Expression {
         this.isAnd = isAnd;
     }
 
-    String notWrapper(String sql) {
-        return this.negation ? sql: "NOT (" + sql + ")";
+    String logicWrapper(String sql) {
+        StringBuilder sb = new StringBuilder();
+        if (this.isAnd) {
+            sb.append("AND ");
+        } else {
+            sb.append("OR ");
+        }
+        if (this.negation) {
+            sb.append(sql);
+        } else {
+            sb.append("NOT (").append(sql).append(")");
+        }
+        return sb.toString();
     }
 
     abstract String toSql();

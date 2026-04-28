@@ -8,6 +8,8 @@ import java.util.LinkedList;
 public class Condition {
     final LinkedList<Expression> expressions = new LinkedList<>();
     final HashMap<String, HashSet<String>> columns = new HashMap<>();
+    public StringBuilder query = new StringBuilder();
+    boolean sqlPrased = false;
 
     public Condition(Expression expression) {
         this.expressions.addFirst(expression);
@@ -16,22 +18,16 @@ public class Condition {
     public Condition() {
     }
 
-    public String toSql() {
+    public void toSql() {
         StringBuilder sql = new StringBuilder();
-        StringBuilder parentheses = new StringBuilder();
         Iterator<Expression> it = this.expressions.iterator();
-        sql.append(it.next().toSql());
+        Expression head = it.next();
+        head.isAnd = true;
+        sql.append(head.toSql().replaceFirst("AND ", ""));
         while (it.hasNext()) {
-            Expression expression = it.next();
-            if (expression.isAnd) {
-                sql.append(" AND ").append(expression.toSql());
-            } else {
-                sql.append(" OR ").append(expression.toSql()).append(")");
-                parentheses.append("(");
-            }
+            sql.append(it.next().toSql());
         }
-        parentheses.append(sql);
-        return parentheses.toString();
+        this.query.append(sql);
     }
 
     void mergeColumns(HashMap<String, HashSet<String>> columns) {
@@ -49,7 +45,20 @@ public class Condition {
         this.mergeColumns(expression.columns);
     }
 
-    public void merge(Condition condition) {
+    public void merge(Condition condition, String connOp) {
         mergeColumns(condition.columns);
+        if (this.sqlPrased & condition.sqlPrased) {
+            switch (connOp) {
+                case "AND":
+                    this.query.append(" AND ").append(condition.query);
+                    break;
+                case "OR":
+                    this.query.append(" OR (").append(condition.query).append(")");
+                    break;
+                case "NOT":
+                    this.query.append(" NOT (").append(condition.query).append(")");
+                    break;
+            }
+        }
     }
 }

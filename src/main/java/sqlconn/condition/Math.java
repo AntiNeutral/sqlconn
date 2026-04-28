@@ -1,7 +1,7 @@
 package sqlconn.condition;
 
 import sqlconn.condition.mathformula.Formula;
-import java.util.HashMap;
+
 import java.util.HashSet;
 
 public class Math extends Expression{
@@ -41,6 +41,8 @@ public class Math extends Expression{
             sql.append(current.toSql());
             current = current.next;
         };
-        return this.notWrapper(sql.toString());
+        return this.logicWrapper(sql.toString());
     }
+
+    /* TODO: rewrite how fomulas are organized*/
 }

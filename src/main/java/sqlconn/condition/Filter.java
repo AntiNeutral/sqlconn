@@ -24,6 +24,6 @@ public class Filter extends Expression{
     @Override
     public String toSql() {
         String sql = this.table + "." + this.column + " = " + this.value;
-        return this.notWrapper(sql);
+        return this.logicWrapper(sql);
     }
 }
