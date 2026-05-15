@@ -55,7 +55,6 @@ public class Condition extends Parentheses<Condition>{
         return sql.toString();
     }
 
-    @Override
     public void negate() {
         Iterator<Expression> it = this.expressions.iterator();
         it.next();

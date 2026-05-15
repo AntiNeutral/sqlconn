@@ -14,8 +14,6 @@ public abstract class Parentheses <T extends Parentheses<T>>{
 
     public abstract String toSql();
 
-    public abstract void negate();
-
     abstract public T wrap(T right) throws IllegalArgumentException;
 
     public String parse() {
@@ -43,7 +41,7 @@ public abstract class Parentheses <T extends Parentheses<T>>{
                     current = current.parent;
                 }
             } else if (last == current.left) {
-                sql.append(")").append(current.right.operator);
+                sql.append(")").append(" ").append(current.right.operator).append(" ");
                 stack.removeLast();
                 current = current.right;
             } else {

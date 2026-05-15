@@ -5,33 +5,24 @@ public abstract class Formula {
     public String table = null;
     public String column = null;
     public Double value = null;
-    public int lp;
-    public int rp;
     String operator;
 
-    public Formula(String table, String column, int lp, int rp) {
+    public Formula(String table, String column) {
         this.table = table;
         this.column = column;
-        this.lp = lp;
-        this.rp = rp;
     }
 
-    public Formula(Double value, int lp, int rp) {
+    public Formula(Double value) {
         this.value = value;
-        this.lp = lp;
-        this.rp = rp;
     }
 
     public String toSql() {
         StringBuilder sb = new StringBuilder();
         if (value != null) {
-            sb.append(" ").append(this.operator).append(" ");
-            sb.repeat("(", Math.max(0, lp)).append(value);
+            sb.append(this.operator).append(" ").append(this.value);
         } else {
-            sb.append(" ").append(this.operator).append(" ");
-            sb.repeat("(", Math.max(0, lp)).append(this.table).append(".").append(this.column);
+            sb.append(this.operator).append(" ").append(this.table).append(".").append(this.column);
         }
-        sb.repeat(")", Math.max(0, rp));
         return sb.toString();
     };
 }

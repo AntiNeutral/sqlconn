@@ -17,14 +17,14 @@ abstract public class Expression {
     String logicWrapper(String sql) {
         StringBuilder sb = new StringBuilder();
         if (this.isAnd) {
-            sb.append("AND ");
+            sb.append("AND");
         } else {
-            sb.append("OR ");
+            sb.append("OR");
         }
         if (this.negation) {
-            sb.append(sql);
+            sb.append(" ").append(sql);
         } else {
-            sb.append("NOT (").append(sql).append(")");
+            sb.append(" NOT (").append(sql).append(")");
         }
         return sb.toString();
     }
