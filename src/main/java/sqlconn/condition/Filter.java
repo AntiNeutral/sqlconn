@@ -10,7 +10,7 @@ public class Filter extends Expression{
         this.value = value;
         this.table = table;
         this.column = column;
-        this.addColumn(table, column);
+        this.addSingleColumn(table, column);
     }
 
     public Filter(String table, String column, String value) {

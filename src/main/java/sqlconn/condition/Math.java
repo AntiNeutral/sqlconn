@@ -1,19 +1,22 @@
 package sqlconn.condition;
 
 import sqlconn.condition.mathformula.Formula;
-
+import sqlconn.condition.mathformula.MathParentheses;
+import java.util.HashMap;
 import java.util.HashSet;
+import static sqlconn.condition.Parentheses.mergeColumns;
 
-public class Math extends Expression{
-    public Formula root;
-    public Formula tail;
+public class Math extends Expression {
+    public MathParentheses root;
+    public Formula formula;
 
     public Math(boolean isAnd, boolean negation, Formula formula) {
         super(isAnd, negation);
-        this.root = formula;
-        this.tail = formula;
-        this.columns.put(formula.column, new HashSet<>());
-        this.columns.get(formula.column).add(formula.table);
+        this.formula = formula;
+        HashMap<String, HashSet<String>> columns = this.formula.getColumns();
+        for (String table : columns.keySet()) {
+            this.columns.put(table, new HashSet<>(columns.get(table)));
+        }
     }
 
     public Math(Formula formula) {
@@ -24,25 +27,26 @@ public class Math extends Expression{
         this(isAnd, true, formula);
     }
 
-    public void append(Formula formula) {
-        this.tail.next = formula;
-        do {
-            this.tail = this.tail.next;
-            this.addColumn(formula.table, formula.column);
-        }
-        while (this.tail.next != null);
+    public Math(boolean isAnd, boolean negation, MathParentheses root) {
+        super(isAnd, negation);
+        this.root = root;
+    }
+
+    public Math(MathParentheses root) {
+        this(true, true, root);
+    }
+
+    public Math(boolean isAnd, MathParentheses root) {
+        this(isAnd, true, root);
     }
 
     @Override
     public String toSql() {
-        Formula current = this.root;
-        StringBuilder sql = new StringBuilder();
-        while (current != null) {
-            sql.append(current.toSql());
-            current = current.next;
+        if (formula != null) {
+            return this.logicWrapper(formula.toSql());
         };
-        return this.logicWrapper(sql.toString());
+        String sql = this.logicWrapper(root.parse());
+        mergeColumns(this.columns, root.columns);
+        return sql;
     }
-
-    /* TODO: rewrite how fomulas are organized*/
 }

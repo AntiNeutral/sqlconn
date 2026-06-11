@@ -7,7 +7,6 @@ import java.util.LinkedList;
 
 public class Condition extends Parentheses<Condition>{
     private final LinkedList<Expression> expressions;
-    final HashMap<String, HashSet<String>> columns = new HashMap<>();
 
     public Condition(Expression expression) {
         this.expressions = new LinkedList<>();
@@ -55,6 +54,13 @@ public class Condition extends Parentheses<Condition>{
         return sql.toString();
     }
 
+    @Override
+    protected void getColumns() {
+        for (Expression expression : this.expressions) {
+            this.mergeColumns(expression.columns);
+        }
+    }
+
     public void negate() {
         Iterator<Expression> it = this.expressions.iterator();
         it.next();
@@ -65,18 +71,7 @@ public class Condition extends Parentheses<Condition>{
         }
     }
 
-    void mergeColumns(HashMap<String, HashSet<String>> columns) {
-        for (String table: columns.keySet()) {
-            if (this.columns.containsKey(table)) {
-                this.columns.get(table).addAll(columns.get(table));
-            } else {
-                this.columns.put(table, new HashSet<>(columns.get(table)));
-            }
-        }
-    }
-
     public void append(Expression expression) {
         this.expressions.addLast(expression);
-        this.mergeColumns(expression.columns);
     }
 }

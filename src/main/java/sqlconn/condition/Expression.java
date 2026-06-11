@@ -31,7 +31,7 @@ abstract public class Expression {
 
     abstract String toSql();
 
-    void addColumn(String table, String column) {
+    void addSingleColumn(String table, String column) {
         if (this.columns.containsKey(table)) {
             this.columns.get(table).add(column);
         } else {
