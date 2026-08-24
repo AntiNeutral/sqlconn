@@ -9,6 +9,14 @@ public abstract class Parentheses <T extends Parentheses<T>>{
     public String operator;
     protected final HashMap<String, HashSet<String>> columns = new HashMap<>();
 
+    public HashMap<String, HashSet<String>> accessColumns() {
+        HashMap<String, HashSet<String>> columns = new HashMap<>();
+        for (String table: this.columns.keySet()) {
+            columns.put(table, new HashSet<>(this.columns.get(table)));
+        }
+        return columns;
+    };
+
     protected abstract T self();
 
     public abstract String toSql();
